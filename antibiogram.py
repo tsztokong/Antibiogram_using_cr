@@ -12,10 +12,9 @@ import msoffcrypto
 import io
 import numpy as np
 
-
+#Find all files, decrypt and concat
 df = None
 password = input('Insert your common password here:')
-#Find all files, decrypt and concat
 for i in os.listdir():
     try:
         temp = io.BytesIO()
@@ -42,11 +41,16 @@ except:
 #####Add your own criteria here##### 
 criteria = {'Specimen': input('\nInput your specimen criteria. All specimens containing the word entered will retain in calculation:\nEnter here:'), 'Specialty': input('\nInput your specialty criteria. All specialty containing the word entered will retain in calculation:\nEnter here:'), 'TestDesc': input('\nInput your Test criteria. All tests containing the word entered will retain in calculation:\nEnter here:')}
 for i in criteria:
-    print(criteria[i])
     if criteria[i] == '':
         pass
     else:
         df = df[df[i].str.contains(criteria[i], case = False, regex = False, na=False)]
+        
+###Customised query
+try:
+    df = df.query(input("\nPlease enter your customised query using Python syntax.\nEnter here:"))
+except:
+    print("No query/query invalid. Will skip.")
 
 
 
@@ -54,7 +58,7 @@ for i in criteria:
 df = df.replace(to_replace = r'\[.*\] (.*)', value = r'\1', regex = True)
 
 #Sort by values
-df.sort_values(by=['CollectDate', 'HN', 'LabNo', 'OrganismSeq'])
+df = df.sort_values(by=['CollectDate', 'HN', 'LabNo', 'OrganismSeq'])
 
 #Group by and select the first entry
 df_enq = df.groupby(['HN', 'Organism']).head(1)
@@ -117,7 +121,12 @@ for i in df_enq_total.columns.values.tolist():
     if df_enq_total[i].isnull().all():
         del df_enq_total[i]
 
-#export to Excel
+#export to Excel to "output" folder
+try:
+    os.mkdir("output")
+except:
+    pass
+os.chdir("output")
 df_enq_total.to_excel(input('Enter the export file name, ending with ".xlsx":\nYour input here:'))
 
 
